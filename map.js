@@ -1,6 +1,9 @@
 const fs = require('graceful-fs');
 const debug = require('debug')('map');
-
+const hash = require('./hash');
+const pad = require('./pad');
+const path = require('path');
+console.log('hash', hash);
 class Map {
     constructor(fileIndex, mapId, width, height) {
         this.path = null;
@@ -79,6 +82,7 @@ class Map {
         const fileDescriptor = this.getFileDescriptor();
         const filehelper = Map.filehelper;
         const headerBuffer = Buffer.alloc(28);
+        const basename = path.basename(this.getFullPath(), 'uop');
 
         fs.readSync(fileDescriptor, headerBuffer, 0, headerBuffer.length, 0);
 
@@ -87,11 +91,19 @@ class Map {
         if (magicNumber !== 0x50594D) {
             throw Error(`Header magic number is invalid: ${magicNumber}`);
         }
-//buf.readIntBE(offset, byteLength[, noAssert])
         const nextBlock = headerBuffer.readIntLE(12, 8, true);
         const count = headerBuffer.readUInt32LE(20);
+        const map = {};
 
-        console.log(count);
+        for(var i = 0; i < count; i++) {
+            const filename = `build/${basename}/${pad(i, 8)}.dat`;
+            // this may not work due to how js uses floats, and we need a uint64_t
+            const hashedFilename = hash(filename) >>> 0;
+
+            map[hashedFilename] = i;
+        }
+
+        console.log(map);
 
     }
 }
