@@ -2,8 +2,7 @@ const fs = require('graceful-fs');
 const debug = require('debug')('map');
 
 class Map {
-    constructor(filehelper, fileIndex, mapId, width, height) {
-        this.filehelper = filehelper;
+    constructor(fileIndex, mapId, width, height) {
         this.path = null;
         this.fileIndex = fileIndex;
         this.mapId = mapId;
@@ -27,7 +26,7 @@ class Map {
         if (this.path) {
             return this.path;
         }
-        const filehelper = this.filehelper;
+        const filehelper = Map.filehelper;
         let newPath = filehelper.getFilePath(`map${this.fileIndex}.mul`);
         if (fs.existsSync(newPath)) {
             this.path = newPath;
@@ -59,13 +58,15 @@ class Map {
     readLandBlock(x, y) {
         //TODO: lock file; get UOP offset
         const offset = ((x * this.blockHeight) + y) * 196 + 4;
-        const buffer = new UInt8Array(192);
+        const buffer = Buffer.alloc(192);
         const block = Array(64).fill(null);
-        fs.readSync(this.fileDescriptor, buffer, 0, buffer.length, offset);
+        const fileDescriptor = this.getFileDescriptor();
+
+        fs.readSync(fileDescriptor, buffer, 0, buffer.length, offset);
 
         return block.map((x, index) => {
-            const id = (buffer[index] << 8) | buffer[index + 1];
-            const z = buffer[index + 2];
+            const id = buffer.readUInt16LE(index);
+            const z = buffer.readUInt8(index + 2);
 
             return {
                 id,
@@ -74,6 +75,25 @@ class Map {
         });
     }
 
+    readUOPFiles() {
+        const fileDescriptor = this.getFileDescriptor();
+        const filehelper = Map.filehelper;
+        const headerBuffer = Buffer.alloc(28);
+
+        fs.readSync(fileDescriptor, headerBuffer, 0, headerBuffer.length, 0);
+
+        const magicNumber = headerBuffer.readUInt32LE(0);
+
+        if (magicNumber !== 0x50594D) {
+            throw Error(`Header magic number is invalid: ${magicNumber}`);
+        }
+//buf.readIntBE(offset, byteLength[, noAssert])
+        const nextBlock = headerBuffer.readIntLE(12, 8, true);
+        const count = headerBuffer.readUInt32LE(20);
+
+        console.log(count);
+
+    }
 }
 
 module.exports = Map;

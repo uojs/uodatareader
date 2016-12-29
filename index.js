@@ -6,6 +6,7 @@ const Map = require('./map');
 module.exports = function(options) {
     filehelper.initialize(options);
 
+    Map.filehelper = filehelper;
     return {
         Map
     };
