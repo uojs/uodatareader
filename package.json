@@ -1,0 +1,12 @@
+{
+  "name": "uodatareader",
+  "version": "1.0.0",
+  "description": "Read data from UO",
+  "main": "index.js",
+  "repository": "https://github.com/kevinhikaruevans/uodatareader.git",
+  "author": "Kevin Evans <kevans@thriftbooks.com>",
+  "license": "MIT",
+  "dependencies": {
+    "graceful-fs": "^4.1.11"
+  }
+}
