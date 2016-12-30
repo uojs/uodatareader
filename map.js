@@ -69,14 +69,12 @@ class Map {
         const block = Array(64).fill(null);
         const fileDescriptor = this.getFileDescriptor();
 
-        if (this.isUOP) {
-            offset = this.calculateOffset(offset);
-        }
+        offset = this.calculateOffset(offset);
         fs.readSync(fileDescriptor, buffer, 0, buffer.length, offset);
 
         return block.map((x, index) => {
-            const id = buffer.readUInt16LE(index);
-            const z = buffer.readUInt8(index + 2);
+            const id = buffer.readUInt16LE(index * 3);
+            const z = buffer.readInt8(index * 3 + 2);
 
             return {
                 id,
@@ -86,20 +84,19 @@ class Map {
     }
     calculateOffset(offset) {
         let pos = 0;
-        console.log(this.uopFiles);
-        for (var k in this.uopFiles) {
-            let t = this.uopFiles[k];
+
+        for (var i = 0; i < this.uopFiles.length; i++) {
+            let t = this.uopFiles[i];
             let currPos = (pos + t.length) >>> 0;
             if (offset < currPos) {
                 return (t.offset + (offset - pos)) >>> 0;
             }
             pos = currPos;
-            console.log(pos);
         }
         throw 'return uoplength';
     }
     readUOPFiles() {
-        const uopFiles = {};
+        const uopFiles = [];
         const fileDescriptor = this.getFileDescriptor();
         const filehelper = Map.filehelper;
         const headerBuffer = Buffer.alloc(28);
@@ -143,20 +140,20 @@ class Map {
 
             const fileBuffer = Buffer.alloc(34);
             for(let i = 0; i < filesCount; i++) {
-                fs.readSync(fileDescriptor, fileBuffer, 0, fileBuffer.length, prevBlock + 12);
+                fs.readSync(fileDescriptor, fileBuffer, 0, fileBuffer.length, prevBlock + 12 + (i * fileBuffer.length));
 
                 const offset = fileBuffer.readIntLE(0, 8, true);
                 const headerLength = fileBuffer.readUInt32LE(8);
                 const compressedLength = fileBuffer.readUInt32LE(12);
                 const decompressedLength = fileBuffer.readUInt32LE(16);
                 const hashed = [fileBuffer.readUInt32LE(24), fileBuffer.readUInt32LE(20)].join('.');
-
                 const flag = fileBuffer.readUInt16LE(28);
-
-                uopFiles[hashed] = {
+                //console.log(hashed);
+                uopFiles.push({
                     offset: offset + headerLength,
                     length: flag === 1 ? compressedLength : decompressedLength
-                };
+                });
+
             }
         }
 
