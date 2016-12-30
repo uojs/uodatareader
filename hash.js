@@ -1,6 +1,6 @@
 function hash(filename) {
     const s = Buffer.from(filename);
-    const MAX_UINT = 0xFFFFFFFF;
+    const MAX_UINT = 0xFFFFFFFFFFFFFFFF;
     let eax, ecx, edx, ebx, esi, edi;
 
     eax = ecx = edx = ebx = esi = edi = 0;

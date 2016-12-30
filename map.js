@@ -1,9 +1,10 @@
 const fs = require('graceful-fs');
 const debug = require('debug')('map');
-const hash = require('./hash');
+//const hash = require('./hash');
+const hash = require('uop-hash');
 const pad = require('./pad');
 const path = require('path');
-console.log('hash', hash);
+
 class Map {
     constructor(fileIndex, mapId, width, height) {
         this.path = null;
@@ -79,6 +80,7 @@ class Map {
     }
 
     readUOPFiles() {
+        const uopFiles = {};
         const fileDescriptor = this.getFileDescriptor();
         const filehelper = Map.filehelper;
         const headerBuffer = Buffer.alloc(28);
@@ -91,19 +93,41 @@ class Map {
         if (magicNumber !== 0x50594D) {
             throw Error(`Header magic number is invalid: ${magicNumber}`);
         }
-        const nextBlock = headerBuffer.readIntLE(12, 8, true);
+        let nextBlock = headerBuffer.readIntLE(12, 8, true);
         const count = headerBuffer.readUInt32LE(20);
-        const map = {};
+        const hashes = {};
 
-        for(var i = 0; i < count; i++) {
+        for(let i = 0; i < count; i++) {
             const filename = `build/${basename}/${pad(i, 8)}.dat`;
             // this may not work due to how js uses floats, and we need a uint64_t
-            const hashedFilename = hash(filename) >>> 0;
-
-            map[hashedFilename] = i;
+            const hashedFilename = hash(filename);
+            const hashed = hashedFilename.join('.');
+            hashes[hashed] = i;
         }
 
-        console.log(map);
+        // seek to nextBlock
+        const loopBuffer = Buffer.alloc(12);
+        while(fs.readSync(fileDescriptor, loopBuffer, 0, loopBuffer.length, nextBlock) > 0) {
+            const filesCount = loopBuffer.readUInt32LE(0);
+            const prevBlock = nextBlock;
+            nextBlock = headerBuffer.readIntLE(4, 8, true);
+
+            const fileBuffer = Buffer.alloc(34);
+            for(let i = 0; i < filesCount; i++) {
+                fs.readSync(fileDescriptor, fileBuffer, 0, fileBuffer.length, prevBlock + 12);
+
+                const offset = fileBuffer.readIntLE(0, 8, true);
+                const headerLength = fileBuffer.readUInt32LE(8);
+                const compressedLength = fileBuffer.readUInt32LE(12);
+                const decompressedLength = fileBuffer.readUInt32LE(16);
+                const hashed = [fileBuffer.readUInt32LE(20), fileBuffer.readUInt32LE(24)].join('.');
+
+                const flag = fileBuffer.readUInt16LE(28);
+                console.log(hashed);
+                console.log(hashes[hashed]);
+            }
+            break;
+        }
 
     }
 }
