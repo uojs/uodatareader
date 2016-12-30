@@ -1,22 +1,26 @@
 const fs = require('graceful-fs');
-const debug = require('debug')('map');
-//const hash = require('./hash');
-const hash = require('uop-hash');
-const pad = require('./pad');
 const path = require('path');
+const hash = require('uop-hash');
+const debug = require('debug')('map');
+
+const pad = require('./pad');
 
 class Map {
-    constructor(fileIndex, mapId, width, height) {
-        this.path = null;
+    constructor(fileIndex, width, height) {
         this.fileIndex = fileIndex;
-        this.mapId = mapId;
         this.width = width;
         this.height = height;
-        this.blockWidth = width >> 3;
-        this.blockHeight = height >> 3;
         this.isUOP = false;
+        this.uopFiles = null;
         this.fileDescriptor = null;
+
+        this.path = this.getFullPath();
+
+        if (this.path === null) {
+            throw new Error('file path is null');
+        }
     }
+
     getFileDescriptor() {
         if (this.fileDescriptor) {
             return this.fileDescriptor;
@@ -52,29 +56,33 @@ class Map {
 
     getLandBlock(x, y) {
         if (x < 0 || y < 0 || x >= this.blockWidth || y >= this.blockHeight) {
-            debug(`Out of bounds: (x = ${x}, y = ${y})`);
-            return [];
+            throw new Error (`Out of bounds: (x = ${x}, y = ${y})`);
         }
 
         return this.readLandBlock(x, y);
     }
 
     readLandBlock(x, y) {
-        this.readUOPFiles();
+        const blockHeight = this.height >> 3;
+        let offset = ((x * blockHeight) + y) * 196 + 4;
+
         if (this.isUOP) {
+            if (this.uopFiles === null) {
+                this.readUOPFiles();
+            }
+            offset = this.calculateOffset(offset);
         }
         //TODO: lock file; get UOP offset
-        let offset = ((x * this.blockHeight) + y) * 196 + 4;
         const buffer = Buffer.alloc(192);
         const block = Array(64).fill(null);
         const fileDescriptor = this.getFileDescriptor();
 
-        offset = this.calculateOffset(offset);
         fs.readSync(fileDescriptor, buffer, 0, buffer.length, offset);
 
         return block.map((x, index) => {
-            const id = buffer.readUInt16LE(index * 3);
-            const z = buffer.readInt8(index * 3 + 2);
+            const offset = index * 3;
+            const id = buffer.readUInt16LE(offset);
+            const z = buffer.readInt8(offset + 2);
 
             return {
                 id,
@@ -82,12 +90,14 @@ class Map {
             };
         });
     }
+
     calculateOffset(offset) {
         let pos = 0;
 
         for (var i = 0; i < this.uopFiles.length; i++) {
             let t = this.uopFiles[i];
             let currPos = (pos + t.length) >>> 0;
+
             if (offset < currPos) {
                 return (t.offset + (offset - pos)) >>> 0;
             }
@@ -118,13 +128,9 @@ class Map {
 
         for(let i = 0; i < count; i++) {
             const filename = `build/${basename}/${pad(i, 8)}.dat`;
-            // this may not work due to how js uses floats, and we need a uint64_t
-            const hashedFilename = hash(filename);
-            const hashed = hashedFilename.join('.');
+            const hashed = hash(filename).join('.');
             hashes[hashed] = i;
         }
-
-        // seek to nextBlock
 
         const loopBuffer = Buffer.alloc(12);
         let fileIndex = nextBlock;
