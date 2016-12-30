@@ -60,12 +60,18 @@ class Map {
     }
 
     readLandBlock(x, y) {
+        this.readUOPFiles();
+        if (this.isUOP) {
+        }
         //TODO: lock file; get UOP offset
-        const offset = ((x * this.blockHeight) + y) * 196 + 4;
+        let offset = ((x * this.blockHeight) + y) * 196 + 4;
         const buffer = Buffer.alloc(192);
         const block = Array(64).fill(null);
         const fileDescriptor = this.getFileDescriptor();
 
+        if (this.isUOP) {
+            offset = this.calculateOffset(offset);
+        }
         fs.readSync(fileDescriptor, buffer, 0, buffer.length, offset);
 
         return block.map((x, index) => {
@@ -78,13 +84,26 @@ class Map {
             };
         });
     }
-
+    calculateOffset(offset) {
+        let pos = 0;
+        console.log(this.uopFiles);
+        for (var k in this.uopFiles) {
+            let t = this.uopFiles[k];
+            let currPos = (pos + t.length) >>> 0;
+            if (offset < currPos) {
+                return (t.offset + (offset - pos)) >>> 0;
+            }
+            pos = currPos;
+            console.log(pos);
+        }
+        throw 'return uoplength';
+    }
     readUOPFiles() {
         const uopFiles = {};
         const fileDescriptor = this.getFileDescriptor();
         const filehelper = Map.filehelper;
         const headerBuffer = Buffer.alloc(28);
-        const basename = path.basename(this.getFullPath(), 'uop');
+        const basename = path.basename(this.getFullPath().toLowerCase(), '.uop');
 
         fs.readSync(fileDescriptor, headerBuffer, 0, headerBuffer.length, 0);
 
@@ -93,8 +112,11 @@ class Map {
         if (magicNumber !== 0x50594D) {
             throw Error(`Header magic number is invalid: ${magicNumber}`);
         }
+        //read8
         let nextBlock = headerBuffer.readIntLE(12, 8, true);
-        const count = headerBuffer.readUInt32LE(20);
+
+        //read4
+        const count = headerBuffer.readUInt32LE(24);
         const hashes = {};
 
         for(let i = 0; i < count; i++) {
@@ -106,11 +128,18 @@ class Map {
         }
 
         // seek to nextBlock
+
         const loopBuffer = Buffer.alloc(12);
+        let fileIndex = nextBlock;
+
         while(fs.readSync(fileDescriptor, loopBuffer, 0, loopBuffer.length, nextBlock) > 0) {
+            if (nextBlock === 0) {
+                break;
+            }
             const filesCount = loopBuffer.readUInt32LE(0);
-            const prevBlock = nextBlock;
-            nextBlock = headerBuffer.readIntLE(4, 8, true);
+            let prevBlock = nextBlock;
+            //nextBlock = headerBuffer.readUInt32LE(4);
+            nextBlock = headerBuffer.readIntLE(4, 8, true) >>> 0;
 
             const fileBuffer = Buffer.alloc(34);
             for(let i = 0; i < filesCount; i++) {
@@ -120,15 +149,18 @@ class Map {
                 const headerLength = fileBuffer.readUInt32LE(8);
                 const compressedLength = fileBuffer.readUInt32LE(12);
                 const decompressedLength = fileBuffer.readUInt32LE(16);
-                const hashed = [fileBuffer.readUInt32LE(20), fileBuffer.readUInt32LE(24)].join('.');
+                const hashed = [fileBuffer.readUInt32LE(24), fileBuffer.readUInt32LE(20)].join('.');
 
                 const flag = fileBuffer.readUInt16LE(28);
-                console.log(hashed);
-                console.log(hashes[hashed]);
+
+                uopFiles[hashed] = {
+                    offset: offset + headerLength,
+                    length: flag === 1 ? compressedLength : decompressedLength
+                };
             }
-            break;
         }
 
+        this.uopFiles = uopFiles;
     }
 }
 
