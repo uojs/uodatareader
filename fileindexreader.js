@@ -10,6 +10,12 @@ class FileIndexReader {
         this.options = options;
         this.readIndex();
     }
+    get length() {
+        if (this.indexLookups) {
+            return this.indexLookups.length;
+        }
+        return 0;
+    }
     lookup(index) {
         if (!this.indexLookups) {
             return null;
@@ -72,41 +78,49 @@ class FileIndexReader {
         }
         reader.nextLong(); // version + sig
         let nextBlock = reader.nextLong();
-        reader.nextInt(); // block capacity
+        const blockCapacity = reader.nextInt();
         const count = reader.nextInt();
+
+        if (!this.options.length) {
+            this.options.length = count;
+        }
         const hashes = this.buildUOPHashes();
-        reader.seek(nextBlock);
-        const uopFiles = [];
-        //const index = {};
         const indexLookups = new Int32Array(this.options.length);
         const indexLengths = new Int32Array(this.options.length);
-
-        while(reader.canRead) {
+        reader.seek(nextBlock);
+        do {
             const filesCount = reader.nextInt();
             nextBlock = reader.nextULong();
-            if (nextBlock <= 0) {
+            /*if (nextBlock <= 0) {
                 break;
-            }
+            }*/
             for(let i = 0; i < filesCount; i++) {
-                const offset = reader.nextLong();
+                const offset = reader.nextULong();
+                //console.log(offset);
+
                 const headerLength = reader.nextInt();
                 const compressedLength = reader.nextInt();
                 const decompressedLength = reader.nextInt();
                 const hash = [reader.nextUInt(), reader.nextUInt()].reverse().join('.');
                 reader.nextInt(); //adler32
                 const flag = reader.nextShort();
+                if (offset === 0) {
+                    continue;
+                }
+                const idx = hashes[hash];
+                /*index[idx] = {
+                    lookup: (offset + headerLength),
+                    length: flag === 1 ? compressedLength : decompressedLength
+                }*/
 
-                const idx = (hashes[hash]);
                 indexLookups[idx] = (offset + headerLength);
                 indexLengths[idx] = flag === 1 ? compressedLength : decompressedLength;
 
-                if (this.options.hasExtra) {
+                /*if (this.options.hasExtra) {
                     throw 'extra flags not supported at this time';
-                }
+                }*/
             }
-
-            reader.seek(nextBlock);
-        }
+        } while (reader.canRead && reader.seek(nextBlock));
 
         this.indexLookups = indexLookups;
         this.indexLengths = indexLengths;

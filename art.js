@@ -3,8 +3,9 @@ const FileIndexReader = require('./fileindexreader');
 
 class Art {
 
-    constructor() {
+    constructor(options) {
         this.index = new FileIndexReader({
+            baseDirectory: options.baseDirectory,
             indexFile: 'art.idx',
             mulFile: 'art.mul',
             uopFileExtension: 'tga',
