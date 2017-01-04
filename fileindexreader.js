@@ -8,9 +8,14 @@ const pad = require('./pad');
 class FileIndexReader {
     constructor(options) {
         this.options = options;
-        this.index = this.readIndex();
+        this.readIndex();
     }
-
+    lookup(index) {
+        return {
+            lookup: this.indexLookups[index],
+            length: this.indexLengths[index]
+        };
+    }
     getReader() {
         if (this.reader) {
             return this.reader;
@@ -26,9 +31,8 @@ class FileIndexReader {
         if (this.path) {
             return this.path;
         }
-        const filehelper = FileIndexReader.filehelper;
-        let newPath = filehelper.getFilePath(this.options.mulFile);
-        const basename = path.basename(newPath, '.mul');
+        let newPath = path.join(this.options.baseDirectory, this.options.mulFile);
+        const basename = path.basename(this.options.mulFile, '.mul');
 
         if (fs.existsSync(newPath)) {
             this.path = newPath;
@@ -37,7 +41,7 @@ class FileIndexReader {
             return this.path;
         }
 
-        newPath = filehelper.getFilePath(`${basename}LegacyMUL.uop`);
+        newPath = path.join(this.options.baseDirectory, `${basename}LegacyMUL.uop`);
         if (fs.existsSync(newPath)) {
             this.path = newPath;
             this.isUOP = true;
@@ -63,7 +67,10 @@ class FileIndexReader {
         const hashes = this.buildUOPHashes();
         reader.seek(nextBlock);
         const uopFiles = [];
-        const index = {};
+        //const index = {};
+        const indexLookups = new Int32Array(this.options.length);
+        const indexLengths = new Int32Array(this.options.length);
+
         while(reader.canRead) {
             const filesCount = reader.nextInt();
             nextBlock = reader.nextULong();
@@ -80,17 +87,19 @@ class FileIndexReader {
                 const flag = reader.nextShort();
 
                 const idx = (hashes[hash]);
+                indexLookups[idx] = (offset + headerLength);
+                indexLengths[idx] = flag === 1 ? compressedLength : decompressedLength;
 
-                index[idx] = {
-                    lookup: (offset + headerLength),
-                    length: flag === 1 ? compressedLength : decompressedLength
-                };
+                if (this.options.hasExtra) {
+                    throw 'extra flags not supported at this time';
+                }
             }
 
             reader.seek(nextBlock);
         }
 
-        this.index = index;
+        this.indexLookups = indexLookups;
+        this.indexLengths = indexLengths;
     }
     buildUOPHashes() {
         const hashes = {};
