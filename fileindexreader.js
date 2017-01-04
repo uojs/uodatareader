@@ -52,13 +52,14 @@ class FileIndexReader {
         return null;
     }
     readIndex() {
-        if (this.isUOP) {
-            throw 'mul is not supported yet';
-        }
         const reader = this.getReader();
 
+        if (!this.isUOP) {
+            throw 'mul is not supported yet';
+        }
+
         if (reader.nextInt() != 0x50594D) {
-            throw Error('Header magic number is invalid');
+            throw 'header magic number is invalid';
         }
         reader.nextLong(); // version + sig
         let nextBlock = reader.nextLong();
@@ -82,7 +83,7 @@ class FileIndexReader {
                 const headerLength = reader.nextInt();
                 const compressedLength = reader.nextInt();
                 const decompressedLength = reader.nextInt();
-                const hash = [reader.nextUInt(), reader.nextUInt()].reverse().join('.'); // might be .reversed
+                const hash = [reader.nextUInt(), reader.nextUInt()].reverse().join('.');
                 reader.nextInt(); //adler32
                 const flag = reader.nextShort();
 
