@@ -7,8 +7,10 @@
   "author": "Kevin Evans <kevans@thriftbooks.com>",
   "license": "MIT",
   "dependencies": {
+    "binreader": "0.0.2",
     "debug": "^2.6.0",
     "graceful-fs": "^4.1.11",
+    "sharp": "^0.17.0",
     "uop-hash": "^1.0.3"
   }
 }

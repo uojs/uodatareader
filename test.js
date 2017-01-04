@@ -4,9 +4,10 @@ const datareader = uodatareader({
     path: '../tmp/uo/'
 });
 
-const map = new datareader.Map(0, 6144, 4096);
-
-//map.readUOPFiles(1, 1);
-console.log(
-    map.readLandBlock(1, 1)
-);
+//idxFile, mulFile, uopFile, length
+const art = new datareader.FileIndexReader({
+    indexFile: 'art.idx',
+    mulFile: 'art.mul',
+    uopFileExtension: 'tga',
+    length: 0x10000
+});
