@@ -17,7 +17,7 @@ class Art {
 
     }
 
-    loadStatic(id) {
+    loadLand(id) {
         const item = this.index.lookup(id);
         const reader = this.index.reader;
         const readBuffer = Buffer.alloc(item.length);
@@ -28,28 +28,38 @@ class Art {
         fs.readSync(fd, readBuffer, 0, readBuffer.length, item.lookup);
 
         let xOffset = 21;
-        let xRun = 2;
+        let xWidth = 2;
         let i = 0;
-        for (let y = 0; y < 22; y++, xOffset--, xRun++) {
-            //From1555To8888
-            for(let x = xOffset; x < xRun; x++) {
-                const value = readBuffer.readInt16LE(i++) | 0x8000; // force alpha=1
-                const colorParts = ColorConverter.From1555To8888(value);
-                const writeOffset = 4 * (x + y * 44);
-                //writeBuffer[writeOffset]
-                colorParts.copy(writeBuffer, writeOffset);
+
+        // build the top half of the triangle:
+        for (let y = 0; y < 22; ++y, --xOffset, xWidth += 2) {
+            for(let x = xOffset; x < xWidth + xOffset; x++, i += 2) {
+                const value = readBuffer.readInt16LE(i) | 0x8000; // force alpha=1
+                const colorBuffer = ColorConverter.From1555To8888(value);
+                const writeOffset = 4 /* bytes per pixel */ * (x + y * 44);
+                colorBuffer.copy(writeBuffer, writeOffset);
             }
-            //
         }
 
-        const image = sharp(writeBuffer, {
+        // build the bottom half of the triangle:
+        xOffset = 0;
+        xWidth = 44;
+        for (let y = 0; y < 22; ++y, ++xOffset, xWidth -= 2) {
+            for(let x = xOffset; x < xWidth + xOffset; x++, i += 2) {
+                const value = readBuffer.readInt16LE(i) | 0x8000; // force alpha=1
+                const colorBuffer = ColorConverter.From1555To8888(value);
+                const writeOffset = 4 /* bytes per pixel */ * (x + y * 44) + 44 * 22 * 4;
+                colorBuffer.copy(writeBuffer, writeOffset);
+            }
+        }
+
+        return sharp(writeBuffer, {
             raw: {
                 height: 44,
                 width: 44,
                 channels: 4
             }
         });
-        image.toFile('blah.png');
     }
 }
 
