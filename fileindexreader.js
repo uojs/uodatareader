@@ -11,6 +11,15 @@ class FileIndexReader {
         this.readIndex();
     }
     lookup(index) {
+        if (!this.indexLookups) {
+            return null;
+        }
+        if (index < 0 || index >= this.indexLookups.length) {
+            return {
+                lookup: -1,
+                length: -1
+            };
+        }
         return {
             lookup: this.indexLookups[index],
             length: this.indexLengths[index]

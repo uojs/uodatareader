@@ -4,7 +4,6 @@ const datareader = uodatareader({
     path: '../tmp/uo/'
 });
 
-//idxFile, mulFile, uopFile, length
 const art = new datareader.FileIndexReader({
     baseDirectory: '../tmp/uo/',
     indexFile: 'art.idx',
@@ -13,4 +12,4 @@ const art = new datareader.FileIndexReader({
     length: 0x10000
 });
 
-console.log(art.lookup(3));
+console.log(art.lookup(512));
