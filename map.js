@@ -1,8 +1,6 @@
 const fs = require('graceful-fs');
 const path = require('path');
 const hash = require('uop-hash');
-const debug = require('debug')('map');
-//const BinReader = require('binreader');
 const FileIndexReader = require('./fileindexreader');
 const pad = require('./pad');
 
@@ -16,7 +14,6 @@ class Map {
             uopFileExtension: 'dat'
         });
     }
-
 
     getLandBlock(x, y) {
         if (x < 0 || y < 0) {
@@ -53,10 +50,8 @@ class Map {
         let pos = 0;
         const index = this.index;
         const length = index.length;
-        console.log('length', length)
         for (var i = 0; i < length; i++) {
             let t = index.lookup(i);
-            console.log(t);
             let currPos = (pos + t.length) >>> 0;
 
             if (offset < currPos) {

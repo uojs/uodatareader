@@ -1,6 +1,6 @@
 {
   "name": "uodatareader",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Read data from UO",
   "main": "index.js",
   "repository": "https://github.com/kevinhikaruevans/uodatareader.git",
@@ -8,7 +8,6 @@
   "license": "MIT",
   "dependencies": {
     "binreader": "0.0.4",
-    "debug": "^2.6.0",
     "graceful-fs": "^4.1.11",
     "sharp": "^0.17.0",
     "uop-hash": "^1.0.3"
