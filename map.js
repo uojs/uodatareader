@@ -36,7 +36,7 @@ class Map {
         return this.readLandBlock(x, y);
     }
 
-    readMyMethod(x, y) {
+    readMyMethod(x, y, size) {
         /*
          SizeOfLandChunk = 196
 
@@ -57,6 +57,20 @@ class Map {
          Block + Cell:
             ((({X} * {HEIGHT-CHUNK}) + {Y}) * {SIZE-CHUNK} + 4) + (({Y} * 8) + {X}) * 3
         */
+
+        const cell = {
+            startX: x - size,
+            startY: y + size,
+            endX : x + size,
+            endY : y - size
+        };
+
+        const block = {
+            startX: ~~(cell.startX / 8),
+            startY: ~~(cell.startY / 8),
+            endX : ~~(cell.endX / 8),
+            endY : ~~(cell.endY / 8)
+        };
 
         // let offset = (((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4) + ((8 * 8) + 7) * 3;
         let offset = ((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4;
