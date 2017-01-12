@@ -60,9 +60,9 @@ class Map {
 
         const cell = {
             startX: x - size,
-            startY: y + size,
+            startY: y - size,
             endX : x + size,
-            endY : y - size
+            endY : y + size
         };
 
         const block = {
@@ -72,34 +72,67 @@ class Map {
             endY : ~~(cell.endY / 8)
         };
 
+        // Blocks
+        for(let y = block.startY; y <= block.endY; y++) {
+            for(let x = block.startX; x <= block.endX; x++) {
+                let offset = ((x * this.chunkHeight) + y) * 196 + 4;
+
+                // Cells
+                for(let cellY = 0; cellY < 8; cellY++) {
+                    for(let cellX = 0; cellX < 8; cellX++) {
+                        if((y * 8) + cellY >= cell.startY && (y * 8) + cellY <= cell.endY) {
+                            if((x * 8) + cellX >= cell.startX && (x * 8) + cellX <= cell.endX) {
+                                offset = offset + ((cellY * 8) + cellX) * 3;
+
+/*
+                                if (this.index.isUOP) {
+                                    offset = this.calculateOffset(offset);
+                                }
+
+                                // console.log(2, offset);
+                                if (!this.index.reader.seek(offset)) {
+                                    throw `could not seek to ${offset}`;
+                                }
+
+                                return Array(size).fill(null).map((x, index) => {
+                                    const id = this.index.reader.nextUShort();
+                                    const z = this.index.reader.nextSByte();
+
+                                    return {
+                                        id,
+                                        z
+                                    };
+                                })
+*/
+                                console.log(cellY, cellX)
+                            }
+                        }
+                    }
+                }
+
+                // console.log('block', y, x);
+            }
+        }
+
+
         // let offset = (((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4) + ((8 * 8) + 7) * 3;
-        let offset = ((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4;
+        // let offset = ((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4;
 
-        console.log(1, offset);
-        if (this.index.isUOP) {
-            offset = this.calculateOffset(offset);
-        }
+        // console.log(1, offset);
+        // if (this.index.isUOP) {
+        //     offset = this.calculateOffset(offset);
+        // }
 
-        console.log(2, offset);
-        if (!this.index.reader.seek(offset)) {
-            throw `could not seek to ${offset}`;
-        }
+        // console.log(2, offset);
+        // if (!this.index.reader.seek(offset)) {
+        //     throw `could not seek to ${offset}`;
+        // }
 
-        console.log(3, offset);
+        // console.log(3, offset);
         /*console.log({
             id : this.index.reader.nextUShort(),
             z : this.index.reader.nextSByte()
         });*/
-        return Array(64).fill(null).map((x, index) => {
-            const id = this.index.reader.nextUShort();
-            const z = this.index.reader.nextSByte();
-
-            return {
-                id,
-                z
-            };
-        });
-
     }
 
     readLandBlock(x, y) {
