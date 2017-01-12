@@ -13,8 +13,18 @@ class Map {
             mulFile: `map${options.mapId}.mul`,
             uopFileExtension: 'dat'
         });
-    }
 
+        this.chunkHeights = [
+            512,
+            512,
+            200,
+            256,
+            181
+        ];
+    }
+    get chunkHeight() {
+        return this.chunkHeights[this.options.mapId];
+    }
     getLandBlock(x, y) {
         if (x < 0 || y < 0) {
             throw new Error (`Out of bounds: (x = ${x}, y = ${y})`);
@@ -24,8 +34,7 @@ class Map {
     }
 
     readLandBlock(x, y) {
-        const blockHeight = this.height >> 3;
-        let offset = ((x * blockHeight) + y) * 196 + 4;
+        let offset = ((x * this.chunkHeight) + y) * 196 + 4;
 
         if (this.index.isUOP) {
             offset = this.calculateOffset(offset);
@@ -35,15 +44,17 @@ class Map {
             throw `could not seek to ${offset}`;
         }
 
-        return Array(64).fill(null).map((x, index) => {
-            const id = this.index.reader.nextUShort();
-            const z = this.index.reader.nextSByte();
+        return Array(64)
+            .fill(null)
+            .map((x, index) => {
+                const id = this.index.reader.nextUShort();
+                const z = this.index.reader.nextSByte();
 
-            return {
-                id,
-                z
-            };
-        });
+                return {
+                    id,
+                    z
+                };
+            });
     }
 
     calculateOffset(offset) {
@@ -59,7 +70,7 @@ class Map {
             }
             pos = currPos;
         }
-        throw 'todo: return uoplength?';
+        return length;
     }
 }
 
