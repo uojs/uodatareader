@@ -7,7 +7,7 @@ const uodatareader = require('./index')({
 const felucca = uodatareader.maps[0];
 
 // const area = felucca.getLandBlock(472, 315);
-const my = felucca.readMyMethod(3787, 2523, 4);
+const my = felucca.readMyMethod(3787, 2523, 20);
 
 // for(let i in my) {
 //     console.log('y %d, lenght %d', i, my[i].length)

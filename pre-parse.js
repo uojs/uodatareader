@@ -1,10 +1,11 @@
-const uodatareader = require('./index')({
+const { writeFileSync } = require('fs');
+/*const uodatareader = require('./index')({
     baseDirectory: './uo',
     maps: [{id: 0}, {id: 1}]
 });
 
 // load map block:
-const felucca = uodatareader.maps[0];
+const felucca = uodatareader.maps[0];*/
 
 const size = {
     x : 768,
@@ -12,8 +13,18 @@ const size = {
 };
 
 const map = [];
-for(let currentY = 0; currentY < 1; currentY++) {
-    for(let currentX = 0; currentX < 10; currentX++) {
+
+// 472, 315
+for(let currentY = 0; currentY < size.y; currentY++) {
+    for(let currentX = 0; currentX < size.x; currentX++) {
+        const uodatareader = require('./index')({
+            baseDirectory: './uo',
+            maps: [{id: 0}]
+        });
+
+// load map block:
+        const felucca = uodatareader.maps[0];
+
         const block = felucca.getLandBlock(currentX, currentY);
 
         for(let i in block) {
@@ -25,18 +36,19 @@ for(let currentY = 0; currentY < 1; currentY++) {
             }
 
             if(!block[i].id) {
-                console.log('ERROR', currentX, currentY, i, block[i]);
+                console.log('ERROR', currentX, currentY, x, y, i, block[i]);
             }
             map[y].push(block[i]);
-            // console.log((currentY * 8) + y, (currentX * 8) + x);
+            console.log((currentY * 8) + y, (currentX * 8) + x);
 
         }
     }
 }
 
-// console.log(map.length, JSON.stringify(map));
-const area = felucca.getLandBlock(9, 0);
-console.log(area);
+writeFileSync('result.json', JSON.stringify(map));
+console.log(map.length, JSON.stringify(map));
+// const area = felucca.getLandBlock(9, 0);
+// console.log(area);
 // const my = felucca.readMyMethod(3787, 2523, 4);
 
 // for(let i in my) {
