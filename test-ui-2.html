@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body {
+            display: flex;
+            width: calc(44px * 21);
+            height: calc(44px * 21);
+            flex-wrap: wrap;
+            margin: 0 auto;
+            transform: rotate(45deg) scale(0.6);
+        }
+        div {
+            width: calc(44px * 21);
+            height: calc(44px);
+            display: flex;
+            flex-wrap: wrap;
+        }
+        img {
+            transform: rotate(-45deg) scale(1.4);
+            display: block;
+        }
+    </style>
+    <script>
+        let y = ~~(2523 / 8) - 1;
+        let x = ~~(3787 / 8) - 1;
+
+/*
+        let map = [
+            Array(3).fill(null),
+            Array(3).fill(null),
+            Array(3).fill(null)
+        ];
+*/
+
+        const map = [[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":82,"z":-15},{"id":82,"z":-15},{"id":87,"z":-15},{"id":91,"z":-15},{"id":94,"z":-15},{"id":99,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":168,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":36,"z":-15},{"id":26,"z":-15},{"id":79,"z":-15},{"id":82,"z":-15},{"id":87,"z":-15},{"id":91,"z":-15},{"id":99,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":209,"z":1},{"id":31,"z":1},{"id":36,"z":-15},{"id":26,"z":-15},{"id":79,"z":-15},{"id":87,"z":-15},{"id":95,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":170,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":206,"z":3},{"id":206,"z":0},{"id":201,"z":-1},{"id":31,"z":-2},{"id":26,"z":-15},{"id":83,"z":-15},{"id":95,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":213,"z":2},{"id":203,"z":0},{"id":4,"z":1},{"id":207,"z":1},{"id":35,"z":-2},{"id":83,"z":-15},{"id":95,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":168,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":211,"z":2},{"id":219,"z":1},{"id":218,"z":0},{"id":201,"z":0},{"id":39,"z":2},{"id":83,"z":-15},{"id":95,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":199,"z":1},{"id":214,"z":2},{"id":219,"z":2},{"id":6,"z":0},{"id":39,"z":0},{"id":83,"z":-15},{"id":95,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":170,"z":-5},{"id":169,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":169,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":171,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":168,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":170,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":171,"z":-5},{"id":171,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":168,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":100,"z":-15},{"id":170,"z":-5},{"id":171,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":169,"z":-5},{"id":169,"z":-5},{"id":170,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":100,"z":-15},{"id":168,"z":-5},{"id":170,"z":-5},{"id":171,"z":-5},{"id":170,"z":-5}],[{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":null},{"id":100,"z":-15},{"id":168,"z":-5},{"id":168,"z":-5},{"id":170,"z":-5},{"id":170,"z":-5},{"id":168,"z":-5}]]
+        let ready = 0;
+
+        function render() {
+            let df = document.createDocumentFragment();
+
+            for(let i in map) {
+                const block = document.createElement('div');
+
+                for(let n in map[i]) {
+                    const item = document.createElement('img');
+                    item.src = `http://107.161.24.129:2590/land?id=${map[i][n].id}`;
+
+//                    for(let s in map[i][n]) {
+
+                        block.appendChild(item);
+//                    }
+
+                    df.appendChild(block);
+                }
+            }
+
+            document.body.appendChild(df);
+        }
+
+/*
+        for(let i = 0; i < 3; i ++) {
+            for(let n = 0; n < 3; n++) {
+                console.log(y+i, x+i);
+                const request = window.fetch(`http://107.161.24.129:2590/map?y=${y+i}&x=${x+n}`)
+                request
+                    .then(result => result.json())
+                    .then(result => {
+                        map[i][n] = result;
+                        ready++;
+
+                        if(ready === 9) {
+                            render();
+                        }
+                    })
+            }
+        }
+*/
+    document.addEventListener('load', render)
+    </script>
+</head>
+<body>
+
+</body>
+</html>

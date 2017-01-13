@@ -72,48 +72,60 @@ class Map {
             endY : ~~(cell.endY / 8)
         };
 
+        let startPositionX = cell.startX % 8;
+        let startPositionY = cell.startY % 8;
+
+        const aResult = [];
+
         // Blocks
-        for(let y = block.startY; y <= block.endY; y++) {
-            for(let x = block.startX; x <= block.endX; x++) {
-                let offset = ((x * this.chunkHeight) + y) * 196 + 4;
+        for(let blockY = block.startY; blockY <= block.endY; blockY++) {
+            for(let blockX = block.startX; blockX <= block.endX; blockX++) {
+                let blockOffset = ((blockX * this.chunkHeight) + blockY) * 196 + 4;
 
                 // Cells
-                for(let cellY = 0; cellY < 8; cellY++) {
-                    for(let cellX = 0; cellX < 8; cellX++) {
-                        if((y * 8) + cellY >= cell.startY && (y * 8) + cellY <= cell.endY) {
-                            if((x * 8) + cellX >= cell.startX && (x * 8) + cellX <= cell.endX) {
-                                offset = offset + ((cellY * 8) + cellX) * 3;
+                for(let cellY = startPositionY; cellY < 8; cellY++) {
+                    const globalY = (blockY * 8) + cellY;
+                    const resultY = globalY - cell.startY;
 
-/*
-                                if (this.index.isUOP) {
-                                    offset = this.calculateOffset(offset);
-                                }
+                    if(globalY > cell.endY) {
+                        break;
+                    }
 
-                                // console.log(2, offset);
-                                if (!this.index.reader.seek(offset)) {
-                                    throw `could not seek to ${offset}`;
-                                }
+                    if(!aResult[resultY]) {
+                        aResult.push([])
+                    }
 
-                                return Array(size).fill(null).map((x, index) => {
-                                    const id = this.index.reader.nextUShort();
-                                    const z = this.index.reader.nextSByte();
-
-                                    return {
-                                        id,
-                                        z
-                                    };
-                                })
-*/
-                                console.log(cellY, cellX)
-                            }
+                    for(let cellX = startPositionX; cellX < 8; cellX++) {
+                        if((blockX * 8) + cellX > cell.endX) {
+                            break;
                         }
+
+                        let offsetCell = blockOffset + ((cellY * 8) + cellX) * 3;
+
+                        if(this.index.isUOP) {
+                            offsetCell = this.calculateOffset(offsetCell);
+                        }
+
+                        if(!this.index.reader.seek(offsetCell)) {
+                            throw `could not seek to ${offsetCell}`;
+                        }
+
+                        aResult[resultY].push({
+                            id : this.index.reader.nextUShort(),
+                            z : this.index.reader.nextSByte()
+                        })
                     }
                 }
 
-                // console.log('block', y, x);
+                startPositionX = 0;
             }
+
+
+            startPositionY = 0;
+            startPositionX = cell.startX % 8;
         }
 
+        return aResult;
 
         // let offset = (((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4) + ((8 * 8) + 7) * 3;
         // let offset = ((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4;
@@ -138,9 +150,11 @@ class Map {
     readLandBlock(x, y) {
         let offset = ((x * this.chunkHeight) + y) * 196 + 4;
 
+        console.log('ORIGIN X, Y, OFFSET', x, y, offset);
         if (this.index.isUOP) {
             offset = this.calculateOffset(offset);
         }
+        console.log('ORIGIN isUOP X, Y, OFFSET', x, y, offset);
 
         if (!this.index.reader.seek(offset)) {
             throw `could not seek to ${offset}`;
