@@ -120,7 +120,6 @@ class Map {
                 startPositionX = 0;
             }
 
-
             startPositionY = 0;
             startPositionX = cell.startX % 8;
         }
@@ -150,11 +149,11 @@ class Map {
     readLandBlock(x, y) {
         let offset = ((x * this.chunkHeight) + y) * 196 + 4;
 
-        console.log('ORIGIN X, Y, OFFSET', x, y, offset);
+        // console.log('ORIGIN X, Y, OFFSET', x, y, offset);
         if (this.index.isUOP) {
             offset = this.calculateOffset(offset);
         }
-        console.log('ORIGIN isUOP X, Y, OFFSET', x, y, offset);
+        // console.log('ORIGIN isUOP X, Y, OFFSET', x, y, offset);
 
         if (!this.index.reader.seek(offset)) {
             throw `could not seek to ${offset}`;

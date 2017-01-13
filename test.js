@@ -6,17 +6,7 @@ const uodatareader = require('./index')({
 // load map block:
 const felucca = uodatareader.maps[0];
 
-felucca.getLandBlock(472, 314)
-felucca.getLandBlock(473, 314)
-felucca.getLandBlock(474, 314)
-felucca.getLandBlock(472, 315)
-felucca.getLandBlock(473, 315)
-felucca.getLandBlock(474, 315)
-felucca.getLandBlock(472, 316)
-felucca.getLandBlock(473, 316)
-felucca.getLandBlock(474, 316)
-
-const area = felucca.getLandBlock(472, 315);
+// const area = felucca.getLandBlock(472, 315);
 const my = felucca.readMyMethod(3787, 2523, 10);
 
 // for(let i in my) {
