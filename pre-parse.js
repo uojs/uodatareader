@@ -1,4 +1,4 @@
-const { writeFileSync } = require('fs');
+const { appendFileSync } = require('fs');
 /*const uodatareader = require('./index')({
     baseDirectory: './uo',
     maps: [{id: 0}, {id: 1}]
@@ -12,17 +12,16 @@ const size = {
     y : 512
 };
 
-const map = [];
-
 // 472, 315
 for(let currentY = 0; currentY < size.y; currentY++) {
+    const map = [];
+
     for(let currentX = 0; currentX < size.x; currentX++) {
         const uodatareader = require('./index')({
             baseDirectory: './uo',
             maps: [{id: 0}]
         });
 
-// load map block:
         const felucca = uodatareader.maps[0];
 
         const block = felucca.getLandBlock(currentX, currentY);
@@ -39,14 +38,16 @@ for(let currentY = 0; currentY < size.y; currentY++) {
                 console.log('ERROR', currentX, currentY, x, y, i, block[i]);
             }
             map[y].push(block[i]);
-            console.log((currentY * 8) + y, (currentX * 8) + x);
-
+            console.log(currentY, currentX, block[i])
         }
     }
+
+    const string = JSON.stringify(map)
+    appendFileSync('result.json', string.substring(1, string.length - 1) + ', ');
+    console.log('append')
 }
 
-writeFileSync('result.json', JSON.stringify(map));
-console.log(map.length, JSON.stringify(map));
+// console.log(map.length, JSON.stringify(map));
 // const area = felucca.getLandBlock(9, 0);
 // console.log(area);
 // const my = felucca.readMyMethod(3787, 2523, 4);
