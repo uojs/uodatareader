@@ -9,10 +9,8 @@ function initialize(config) {
     const baseDirectory = config.baseDirectory;
 
     (config.maps || []).forEach(map => {
-        maps[map.id] = new Map({
-            baseDirectory,
-            mapId: map.id
-        });
+        map.baseDirectory = baseDirectory;
+        maps[map.mapId] = new Map(map);
     });
 
     art = new Art({ baseDirectory });
