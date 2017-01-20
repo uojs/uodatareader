@@ -1,5 +1,7 @@
+const { existsSync, mkdirSync, openSync, closeSync, writeSync } = require('fs');
+const { join } = require('path');
+const debug = require('debug')('map');
 const fs = require('graceful-fs');
-const path = require('path');
 const hash = require('uop-hash');
 
 const FileIndexReader = require('./fileindexreader');
@@ -25,6 +27,7 @@ class Map {
             mulFile:          `map${options.fileIndex}.mul`,
             uopFileExtension: 'dat'
         });
+
         console.log(`begin loading map ${options.fileIndex}...`);
         console.time(`loaded map ${options.fileIndex}`);
         //this.map = this.loadMap();
@@ -44,27 +47,73 @@ class Map {
         return this.options.width >> 3;
     }
 
+    get _cacheFile() {
+        return `${this.options.fileIndex}-${this.options.mapId}.js`;
+    }
+
+    get _cachePath() {
+        return join(this.options.cache, this._cacheFile);
+    }
+
     loadMap() {
-        const result = [];
+        let result = [];
 
-        for(let y = 0; y < this.blockWidth; y++) {
-            for(let x = 0; x < this.blockHeight; x++) {
-                // console.time('Me');
-                const block = this._readBlock(x, y);
-                // console.timeEnd('Me');
+        if(this.options.cache) {
+            if(!existsSync(this.options.cache)) {
+                debug('Create cache directory `%s`', this.options.cache);
+                mkdirSync(this.options.cache);
+            }
 
-                for(let i in block) {
-                    if(block.hasOwnProperty(i)) {
-                        const resultY = ~~(i / 8) + (y * 8);
+            if(existsSync(this._cachePath)) {
+                debug('Load cache file `%s`', this._cacheFile);
+                console.log(this._cachePath);
+                result = require(`./${this._cachePath}`);
+            }
+        }
 
-                        if(!result[resultY]) {
-                            result.push([]);
+        if(!result.length) {
+            for(let y = 0; y < this.blockWidth; y++) {
+                for(let x = 0; x < this.blockHeight; x++) {
+                    // console.time('Me');
+                    const block = this._readBlock(x, y);
+                    // console.timeEnd('Me');
+
+                    for(let i in block) {
+                        if(block.hasOwnProperty(i)) {
+                            const resultY = ~~(i / 8) + (y * 8);
+
+                            if(!result[resultY]) {
+                                result.push([]);
+                            }
+
+                            result[resultY].push(block[i]);
                         }
-
-                        result[resultY].push(block[i]);
                     }
                 }
             }
+
+            if(this.options.cache) {
+                debug('Create cache file `%s`', this._cachePath);
+
+                const cacheDescriptor = openSync(this._cachePath, 'w');
+
+                writeSync(cacheDescriptor, '[');
+                for(let i = 0; i < result.length; i++) {
+                    let string = JSON.stringify(result[i]);
+
+                    if(i + 1 < result.length) {
+                        string += ',';
+                    }
+
+                    console.log(i);
+                    writeSync(cacheDescriptor, string);
+                }
+                writeSync(cacheDescriptor, ']');
+                closeSync(cacheDescriptor);
+                debug('Create cache file complete `%s`', this._cachePath);
+                // writeFileSync(this._cachePath, cache);
+            }
+
         }
 
         return result;
@@ -172,11 +221,13 @@ class Map {
                     }
 
                     for(let cellX = startPositionX; cellX < 8; cellX++) {
-                        if((blockX * 8) + cellX > cell.endX) {
+                        const globalX = (blockX * 8) + cellX;
+
+                        if(globalX > cell.endX) {
                             break;
                         }
 
-                        aResult[resultY].push(this.map[cellY][cellX])
+                        aResult[resultY].push(this.map[globalY][globalX])
                     }
                 }
 
