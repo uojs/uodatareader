@@ -29,7 +29,7 @@ class Map {
         console.time(`loaded map ${options.fileIndex}`);
         //this.map = this.loadMap();
         this.tileLength = this.blockHeight * this.blockWidth * 64;
-        this.loadMap();
+        this.map = this.loadMap();
         console.timeEnd(`loaded map ${options.fileIndex}`);
 
         //const landLength = this.landLength = this.blockHeight * this.blockWidth * 64;
@@ -43,27 +43,33 @@ class Map {
     get blockWidth() {
         return this.options.width >> 3;
     }
-    loadMap() {
-        const ids = new Uint16Array(this.tileLength);
-        const z = new Int8Array(this.tileLength);
-        const blockHeight = this.blockHeight;
-        const blockWidth = this.blockWidth;
 
-        for(let x = 1; x < blockHeight; x++) {
-            for(let y = 1; y < blockWidth; y++) {
-                const block = this.readLandBlock(x, y);
-                //const offset = (x * blockHeight + y) * 64;
-                const offset = this.calculateLocalBufferOffset(x, y);
-                ids.set(block.ids, offset);
-                z.set(block.z, offset);
+    loadMap() {
+        const result = [];
+
+        for(let y = 0; y < this.blockWidth; y++) {
+            for(let x = 0; x < this.blockHeight; x++) {
+                // console.time('Me');
+                const block = this._readBlock(x, y);
+                // console.timeEnd('Me');
+
+                for(let i in block) {
+                    if(block.hasOwnProperty(i)) {
+                        const resultY = ~~(i / 8) + (y * 8);
+
+                        if(!result[resultY]) {
+                            result.push([]);
+                        }
+
+                        result[resultY].push(block[i]);
+                    }
+                }
             }
         }
 
-        this.tileData = {
-            ids,
-            z
-        };
+        return result;
     }
+
     expandArray(ids, z) {
         return Array(64)
             .fill(null)
@@ -152,8 +158,6 @@ class Map {
         // Blocks
         for(let blockY = block.startY; blockY <= block.endY; blockY++) {
             for(let blockX = block.startX; blockX <= block.endX; blockX++) {
-                let blockOffset = ((blockX * this.chunkHeight) + blockY) * 196 + 4;
-
                 // Cells
                 for(let cellY = startPositionY; cellY < 8; cellY++) {
                     const globalY = (blockY * 8) + cellY;
@@ -172,20 +176,7 @@ class Map {
                             break;
                         }
 
-                        let offsetCell = blockOffset + ((cellY * 8) + cellX) * 3;
-
-                        if(this.index.isUOP) {
-                            offsetCell = this.calculateOffset(offsetCell);
-                        }
-
-                        if(!this.index.reader.seek(offsetCell)) {
-                            throw `could not seek to ${offsetCell}`;
-                        }
-
-                        aResult[resultY].push({
-                            id : this.index.reader.nextUShort(),
-                            z : this.index.reader.nextSByte()
-                        })
+                        aResult[resultY].push(this.map[cellY][cellX])
                     }
                 }
 
@@ -197,25 +188,29 @@ class Map {
         }
 
         return aResult;
+    }
 
-        // let offset = (((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4) + ((8 * 8) + 7) * 3;
-        // let offset = ((~~(x / 8) * this.chunkHeight) + ~~(y / 8)) * 196 + 4;
+    _readBlock(x, y) {
+        let offset = ((x * this.blockHeight) + y) * 196 + 4;
 
-        // console.log(1, offset);
-        // if (this.index.isUOP) {
-        //     offset = this.calculateOffset(offset);
-        // }
+        if(this.index.isUOP) {
+            offset = this.calculateOffset(offset);
+        }
 
-        // console.log(2, offset);
-        // if (!this.index.reader.seek(offset)) {
-        //     throw `could not seek to ${offset}`;
-        // }
+        if(!this.index.reader.seek(offset)) {
+            throw new Error(`could not seek to ${offset}`);
+        }
 
-        // console.log(3, offset);
-        /*console.log({
-            id : this.index.reader.nextUShort(),
-            z : this.index.reader.nextSByte()
-        });*/
+        const result = [];
+
+        for(let i = 0; i < 64; ++i) {
+            result.push({
+                id : this.index.reader.nextUShort(),
+                z : this.index.reader.nextSByte()
+            })
+        }
+
+        return result;
     }
 
     readLandBlock(x, y) {
