@@ -1,11 +1,5 @@
-const { existsSync, mkdirSync, openSync, closeSync, writeSync } = require('fs');
-const { join } = require('path');
 const debug = require('debug')('map');
-const fs = require('graceful-fs');
-const hash = require('uop-hash');
-
 const FileIndexReader = require('./fileindexreader');
-const pad = require('./pad');
 
 class Map {
 
@@ -28,142 +22,47 @@ class Map {
             uopFileExtension: 'dat'
         });
 
-        console.log(`begin loading map ${options.fileIndex}...`);
-        console.time(`loaded map ${options.fileIndex}`);
-        //this.map = this.loadMap();
-        this.tileLength = this.blockHeight * this.blockWidth * 64;
+        debug('Loaded map %s', options.fileIndex);
         this.map = this.loadMap();
-        console.timeEnd(`loaded map ${options.fileIndex}`);
-
-        //const landLength = this.landLength = this.blockHeight * this.blockWidth * 64;
-        //console.log('land length = ', landLength);
-        //this.landIds = new Uint16Array(landLength);
-        //this.landZs = new Int8Array(landLength);
     }
+
     get blockHeight() {
         return this.options.height >> 3;
     }
+
     get blockWidth() {
         return this.options.width >> 3;
-    }
-
-    get _cacheFile() {
-        return `${this.options.fileIndex}-${this.options.mapId}.js`;
-    }
-
-    get _cachePath() {
-        return join(this.options.cache, this._cacheFile);
     }
 
     loadMap() {
         let result = [];
 
-        if(this.options.cache) {
-            if(!existsSync(this.options.cache)) {
-                debug('Create cache directory `%s`', this.options.cache);
-                mkdirSync(this.options.cache);
-            }
+        debug('Start loop loaded map');
+        for(let y = 0; y < this.blockWidth; y++) {
+            for(let x = 0; x < this.blockHeight; x++) {
+                const block = this._readBlock(x, y);
 
-            if(existsSync(this._cachePath)) {
-                debug('Load cache file `%s`', this._cacheFile);
-                console.log(this._cachePath);
-                result = require(`./${this._cachePath}`);
-            }
-        }
+                for(let i in block) {
+                    const resultY = ~~(i / 8) + (y * 8);
 
-        if(!result.length) {
-            for(let y = 0; y < this.blockWidth; y++) {
-                for(let x = 0; x < this.blockHeight; x++) {
-                    // console.time('Me');
-                    const block = this._readBlock(x, y);
-                    // console.timeEnd('Me');
-
-                    for(let i in block) {
-                        if(block.hasOwnProperty(i)) {
-                            const resultY = ~~(i / 8) + (y * 8);
-
-                            if(!result[resultY]) {
-                                result.push([]);
-                            }
-
-                            result[resultY].push(block[i]);
-                        }
-                    }
-                }
-            }
-
-            if(this.options.cache) {
-                debug('Create cache file `%s`', this._cachePath);
-
-                const cacheDescriptor = openSync(this._cachePath, 'w');
-
-                writeSync(cacheDescriptor, '[');
-                for(let i = 0; i < result.length; i++) {
-                    let string = JSON.stringify(result[i]);
-
-                    if(i + 1 < result.length) {
-                        string += ',';
+                    if(!result[resultY]) {
+                        result.push([]);
                     }
 
-                    console.log(i);
-                    writeSync(cacheDescriptor, string);
+                    result[resultY].push(block[i]);
                 }
-                writeSync(cacheDescriptor, ']');
-                closeSync(cacheDescriptor);
-                debug('Create cache file complete `%s`', this._cachePath);
-                // writeFileSync(this._cachePath, cache);
             }
-
         }
+        debug('End loop loaded map');
 
         return result;
     }
 
-    expandArray(ids, z) {
-        return Array(64)
-            .fill(null)
-            .map((o, i) => {
-                return {
-                    id: ids[i],
-                    z: z[i]
-                };
-            });
-    }
-    calculateLocalBufferOffset(x, y) {
-        //return (x * 64 + y);
-        return ((x * this.blockHeight) + y) * 64;
-    }
-    getLandBlock(x, y) {
-        if (x < 0 || y < 0 || x >= this.blockWidth || y >= this.blockHeight) {
-            throw new Error (`Out of bounds: (x = ${x}, y = ${y})`);
-        }
-
-        const offset = this.calculateLocalBufferOffset(x, y);
-        const ids = this.tileData.ids.subarray(offset, offset + 64);
-        const z = this.tileData.z.subarray(offset, offset + 64);
-
-        return this.expandArray(ids, z);
-    }
-    getLandBlock_old(x, y) {
-        if (x < 0 || y < 0 || x >= this.blockWidth || y >= this.blockHeight) {
-            throw new Error (`Out of bounds: (x = ${x}, y = ${y})`);
-        }
-
-        return this.readLandBlock(x, y);
-        const block = this.map[x][y];
-
-        return Array(64)
-            .fill(null)
-            .map((o, i) => {
-                return {
-                    id: block.ids[i],
-                    z: block.z[i]
-                };
-            });
-        //return this.readLandBlock(x, y);
+    getBlock(x, y) {
+        return this.getTiles(x * 8, y * 8);
     }
 
-    readMyMethod(x, y, size) {
+    getTiles(x, y, size) {
         /*
          SizeOfLandChunk = 196
 
@@ -185,11 +84,16 @@ class Map {
             ((({X} * {HEIGHT-CHUNK}) + {Y}) * {SIZE-CHUNK} + 4) + (({Y} * 8) + {X}) * 3
         */
 
+        const diff = {
+            start   : typeof size === 'number' ? size : 0,
+            end     : typeof size === 'number' ? size : 7
+        };
+
         const cell = {
-            startX: x - size,
-            startY: y - size,
-            endX : x + size,
-            endY : y + size
+            startX: x - diff.start,
+            startY: y - diff.start,
+            endX : x + diff.end,
+            endY : y + diff.end
         };
 
         const block = {
@@ -216,7 +120,8 @@ class Map {
                         break;
                     }
 
-                    if(!aResult[resultY]) {
+                    // Support old style format method getBlock
+                    if(size && !aResult[resultY]) {
                         aResult.push([])
                     }
 
@@ -227,7 +132,12 @@ class Map {
                             break;
                         }
 
-                        aResult[resultY].push(this.map[globalY][globalX])
+                        if(size) {
+                            aResult[resultY].push(this.map[globalY][globalX])
+                        } else {
+                            // Support old style format method getBlock
+                            aResult.push(this.map[globalY][globalX])
+                        }
                     }
                 }
 
@@ -245,7 +155,7 @@ class Map {
         let offset = ((x * this.blockHeight) + y) * 196 + 4;
 
         if(this.index.isUOP) {
-            offset = this.calculateOffset(offset);
+            offset = this._calculateOffset(offset);
         }
 
         if(!this.index.reader.seek(offset)) {
@@ -256,7 +166,7 @@ class Map {
 
         for(let i = 0; i < 64; ++i) {
             result.push({
-                id : this.index.reader.nextUShort(),
+                id: this.index.reader.nextUShort(),
                 z : this.index.reader.nextSByte()
             })
         }
@@ -264,43 +174,12 @@ class Map {
         return result;
     }
 
-    readLandBlock(x, y) {
-        let offset = ((x * this.blockHeight) + y) * 196 + 4;
-        if (this.index.isUOP) {
-            offset = this.calculateOffset(offset);
-            //console.log('uop offset -> ', offset);
-        }
-
-        if (!this.index.reader.seek(offset)) {
-            throw new Error(`could not seek to ${offset}`);
-        }
-        const ids = new Uint16Array(64);
-        const z = new Int8Array(64);
-
-        for(var i = 0; i < 64; ++i) {
-            ids[i] = this.index.reader.nextUShort();
-            z[i] = this.index.reader.nextSByte();
-        }
-        /*
-        return Array(64)
-            .fill(null)
-            .map((o, i) => {
-                return {
-                    id: ids[i],
-                    z: z[i]
-                };
-            });*/
-        return {
-            ids,
-            z
-        };
-    }
-
-    calculateOffset(offset) {
+    _calculateOffset(offset) {
         let pos = 0;
         const index = this.index;
         const length = index.length;
-        for (var i = 0; i < length; i++) {
+
+        for(let i = 0; i < length; i++) {
             let t = index.lookup(i);
             let currPos = (pos + t.length) >>> 0;
 
@@ -309,6 +188,7 @@ class Map {
             }
             pos = currPos;
         }
+
         return length;
     }
 }
