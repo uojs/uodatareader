@@ -38,7 +38,7 @@ class FileIndexReader {
 
         this.reader = new BinReader({
             filename: this.getFullPath(),
-            bufferSize: 4096
+            bufferSize: 1024 * 4
         });
         return this.reader;
     }
