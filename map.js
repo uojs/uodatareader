@@ -35,21 +35,38 @@ class Map {
     }
 
     loadMap() {
-        let result = [];
+        let result = {
+            id: [],
+            z : []
+        };
 
         debug('Start loop loaded map');
         for(let y = 0; y < this.blockWidth; y++) {
             for(let x = 0; x < this.blockHeight; x++) {
-                const block = this._readBlock(x, y);
+                let offset = ((x * this.blockHeight) + y) * 196 + 4;
 
-                for(let i in block) {
+                if(this.index.isUOP) {
+                    offset = this._calculateOffset(offset);
+                }
+
+                if(!this.index.reader.seek(offset)) {
+                    throw new Error(`could not seek to ${offset}`);
+                }
+
+                for(let i = 0; i < 64; ++i) {
                     const resultY = ~~(i / 8) + (y * 8);
+                    const resultX = (i % 8) + (x * 8);
 
-                    if(!result[resultY]) {
-                        result.push([]);
+                    if(!result.id[resultY]) {
+                        result.id.push(new Uint16Array(this.options.height));
                     }
 
-                    result[resultY].push(block[i]);
+                    if(!result.z[resultY]) {
+                        result.z.push(new Int8Array(this.options.height));
+                    }
+
+                    result.id[resultY][resultX] = this.index.reader.nextUShort();
+                    result.z[resultY][resultX] = this.index.reader.nextSByte();
                 }
             }
         }
@@ -133,10 +150,16 @@ class Map {
                         }
 
                         if(size) {
-                            aResult[resultY].push(this.map[globalY][globalX])
+                            aResult[resultY].push({
+                                id: this.map.id[globalY][globalX],
+                                z : this.map.z[globalY][globalX]
+                            })
                         } else {
                             // Support old style format method getBlock
-                            aResult.push(this.map[globalY][globalX])
+                            aResult.push({
+                                id: this.map.id[globalY][globalX],
+                                z : this.map.z[globalY][globalX]
+                            })
                         }
                     }
                 }
@@ -162,13 +185,14 @@ class Map {
             throw new Error(`could not seek to ${offset}`);
         }
 
-        const result = [];
+        const result = {
+            id: new Uint16Array(64),
+            z : new Int8Array(64)
+        };
 
         for(let i = 0; i < 64; ++i) {
-            result.push({
-                id: this.index.reader.nextUShort(),
-                z : this.index.reader.nextSByte()
-            })
+            result.id[i] = this.index.reader.nextUShort();
+            result.z[i] = this.index.reader.nextSByte()
         }
 
         return result;
