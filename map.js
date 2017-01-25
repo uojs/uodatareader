@@ -36,8 +36,8 @@ class Map {
 
     loadMap() {
         let result = {
-            id: [],
-            z : []
+            id: new Array(this.options.width),
+            z : new Array(this.options.width)
         };
 
         debug('Start loop loaded map');
@@ -58,11 +58,11 @@ class Map {
                     const resultX = (i % 8) + (x * 8);
 
                     if(!result.id[resultY]) {
-                        result.id.push(new Uint16Array(this.options.height));
+                        result.id[resultY] = new Uint16Array(this.options.height);
                     }
 
                     if(!result.z[resultY]) {
-                        result.z.push(new Int8Array(this.options.height));
+                        result.z[resultY] = new Int8Array(this.options.height);
                     }
 
                     result.id[resultY][resultX] = this.index.reader.nextUShort();
@@ -172,30 +172,6 @@ class Map {
         }
 
         return aResult;
-    }
-
-    _readBlock(x, y) {
-        let offset = ((x * this.blockHeight) + y) * 196 + 4;
-
-        if(this.index.isUOP) {
-            offset = this._calculateOffset(offset);
-        }
-
-        if(!this.index.reader.seek(offset)) {
-            throw new Error(`could not seek to ${offset}`);
-        }
-
-        const result = {
-            id: new Uint16Array(64),
-            z : new Int8Array(64)
-        };
-
-        for(let i = 0; i < 64; ++i) {
-            result.id[i] = this.index.reader.nextUShort();
-            result.z[i] = this.index.reader.nextSByte()
-        }
-
-        return result;
     }
 
     _calculateOffset(offset) {
