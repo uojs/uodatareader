@@ -13,7 +13,7 @@
     "binreader": "0.0.6",
     "sharp": "0.17.1",
     "debug": "2.6.0",
-    "uop-hash": "1.0.4"
+    "uop-hash": "1.0.5"
   },
   "devDependencies": {
     "mocha": "3.2.0"
