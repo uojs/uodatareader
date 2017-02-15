@@ -1,6 +1,6 @@
 {
   "name": "uodatareader",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Read data from UO",
   "main": "index.js",
   "repository": "https://github.com/kevinhikaruevans/uodatareader.git",
@@ -13,7 +13,7 @@
     "binreader": "0.0.6",
     "sharp": "0.17.1",
     "debug": "2.6.0",
-    "uop-hash": "1.0.5"
+    "uop-hash": "1.0.6"
   },
   "devDependencies": {
     "mocha": "3.2.0"
