@@ -3,7 +3,7 @@
   "version": "1.0.11",
   "description": "Read data from UO",
   "main": "index.js",
-  "repository": "https://github.com/kevinhikaruevans/uodatareader.git",
+  "repository": "https://github.com/uojs/uodatareader.git",
   "author": "Kevin Evans <kevans@thriftbooks.com>",
   "contributors": [
     "Aleksey Novikov <lamo2k123@gmail.com>"
