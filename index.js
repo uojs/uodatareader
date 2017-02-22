@@ -1,6 +1,7 @@
 const Map = require('./map');
 const FileIndexReader = require('./fileindexreader');
 const Art = require('./art');
+const Texture = require('./texture');
 
 function initialize(config) {
     const maps = {};
@@ -11,14 +12,16 @@ function initialize(config) {
         maps[map.mapId] = new Map(map);
     });
 
-    art = new Art({ baseDirectory });
-
+    const art = new Art({ baseDirectory });
+    const texture = new Texture({ baseDirectory })
     return {
         Map,
         Art,
+        Texture,
         FileIndexReader,
         maps,
-        art
+        art,
+        texture
     };
 }
 
