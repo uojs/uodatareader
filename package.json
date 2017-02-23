@@ -1,6 +1,6 @@
 {
   "name": "uodatareader",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Read data from UO",
   "main": "index.js",
   "repository": "https://github.com/uojs/uodatareader.git",

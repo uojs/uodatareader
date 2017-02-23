@@ -18,7 +18,11 @@ class Texture {
     }
 
     loadTexture(id) {
-        const item = this.index.lookup(id);
+        let item = this.index.lookup(id);
+        if (!item.lookup && !item.length) {
+            // revert to the "no draw" texture:
+            item = this.index.lookup(2);
+        }
         const reader = this.index.getMulReader();
         const size = item.extra === 0 ? 64 : 128;
         const readBuffer = Buffer.alloc(item.length);
