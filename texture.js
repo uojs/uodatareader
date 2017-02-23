@@ -28,7 +28,7 @@ class Texture {
 
         for(var i = 0; i < size * size; i++) {
             const value = readBuffer.readInt16LE(i * 2);
-            const colorBuffer = ColorConverter.From1555To8888(value);
+            const colorBuffer = ColorConverter.From1555To8888(value | 0x8000);
 
             colorBuffer.copy(writeBuffer, i * 4);
         }
