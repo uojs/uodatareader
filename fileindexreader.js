@@ -166,12 +166,11 @@ class FileIndexReader {
             const indexExtras  = this.options.hasExtra ? new Int32Array(this.options.length) : null;
 
             for(var i = 0; i < count; i++) {
-                const lookup = reader.nextInt();
-                const length = reader.nextInt();
-                const extra = reader.nextInt();
-                indexLookups[i] = lookup;
-                indexLengths[i] = length;
-                indexExtras[i]   = extra;
+                indexLookups[i] = reader.nextInt();
+                indexLengths[i] = reader.nextInt();
+                if (this.options.hasExtra) {
+                    indexExtras[i]   = reader.nextInt();;
+                }
             }
             this.indexLookups = indexLookups;
             this.indexLengths = indexLengths;

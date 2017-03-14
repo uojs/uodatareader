@@ -9,7 +9,8 @@ class Art {
     constructor(options) {
         this.index = new FileIndexReader({
             baseDirectory: options.baseDirectory,
-            indexFile: 'art.idx',
+            //indexFile: 'art.idx',
+            indexFile: 'artidx.mul',
             mulFile: 'art.mul',
             uopFileExtension: 'tga',
             length: 0x10000
