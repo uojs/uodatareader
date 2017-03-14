@@ -17,7 +17,7 @@ class Map {
         this.options = options;
         this.index   = new FileIndexReader({
             baseDirectory:    options.baseDirectory,
-            indexFile:        `map${options.fileIndex}.idx`,
+            //indexFile:        `map${options.fileIndex}.idx`,
             mulFile:          `map${options.fileIndex}.mul`,
             uopFileExtension: 'dat'
         });
